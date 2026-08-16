@@ -28,11 +28,14 @@ socket.bind(yourPort);
 
 
 function natPunch(){
+  //I decided to wrap messages in a json object format so I could include meta data, such as the message type, to check if its a connection, a message, etc
+  const packet = {type : "connect"};
+  let packetString = JSON.stringify(packet);
+
   setInterval(() => { 
-    socket.send(Buffer.from("TEST"), 0, 4, peerPort, yourIP);
-    console.log("backend send");
+    socket.send(packetString, 0, packetString.length, peerPort, yourIP);
   }
-    , 500);
+  , 500);
  
 };
 
