@@ -1,5 +1,5 @@
-const net = require('node:net');
 const dgram = require('node:dgram');
+const readline = require('node:readline');
 
 let yourIP = process.argv[2];
 let peerIP = process.argv[3];
@@ -15,7 +15,26 @@ socket.on('error', (err) => {
 });
 
 socket.on('message', (msg, rinfo) => {
-  console.log(`socket got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+  let msgJson = JSON.parse(String(msg));
+
+  switch(msgJson.type){
+    case "ping":
+      //ping messages are sent only to keep NAT port alive, so we just return when we get it
+      return;
+    case "message":
+      console.log(msgJson.value);
+    case "connect":
+      NATPunchStatus += 1;
+      if(NATPunchStatus < 2){
+        let packet = {"type" : "connect", "value" : NATPunchStatus};
+        let packetString = JSON.stringify(packet);
+        socket.send(packetString, 0, packetString.length, peerPort, yourIP);
+        clearInterval(NATPunchInterval);
+        connected = true;
+      }
+  }
+
+  //console.log(`socket got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 });
 
 socket.on('listening', () => {
@@ -25,18 +44,31 @@ socket.on('listening', () => {
 
 
 socket.bind(yourPort);
-
+let NATPunchInterval = null;
+let NATPunchStatus = 0; 
 
 function natPunch(){
-  //I decided to wrap messages in a json object format so I could include meta data, such as the message type, to check if its a connection, a message, etc
-  const packet = {type : "connect"};
-  let packetString = JSON.stringify(packet);
-
-  setInterval(() => { 
+  NATPunchInterval = setInterval(() => { 
+    //I decided to wrap messages in a json object format so I could include meta data, such as the message type, to check if its a connection, a message, etc
+    let packet = {"type" : "connect", "value" : NATPunchStatus};
+    let packetString = JSON.stringify(packet);
     socket.send(packetString, 0, packetString.length, peerPort, yourIP);
   }
   , 500);
  
 };
 
+function sendMessage(message){
+  let packet = {"type" : "message", "value" : message}
+  let packetString = JSON.stringify(packet);
+  socket.send(packetString, 0, packetString.length, peerPort, yourIP);
+}
+
 natPunch();
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+rl.on("line", sendMessage);
