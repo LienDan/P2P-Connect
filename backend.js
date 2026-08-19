@@ -17,6 +17,8 @@ socket.on('error', (err) => {
 socket.on('message', (msg, rinfo) => {
   let msgJson = JSON.parse(String(msg));
 
+  console.log(`socket got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+  
   switch(msgJson.type){
     case "ping":
       //ping messages are sent only to keep NAT port alive, so we just return when we get it
@@ -31,10 +33,10 @@ socket.on('message', (msg, rinfo) => {
         socket.send(packetString, 0, packetString.length, peerPort, yourIP);
         clearInterval(NATPunchInterval);
         connected = true;
+        ping();
       }
   }
 
-  //console.log(`socket got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 });
 
 socket.on('listening', () => {
@@ -55,13 +57,20 @@ function natPunch(){
     socket.send(packetString, 0, packetString.length, peerPort, yourIP);
   }
   , 500);
- 
 };
 
 function sendMessage(message){
   let packet = {"type" : "message", "value" : message}
   let packetString = JSON.stringify(packet);
   socket.send(packetString, 0, packetString.length, peerPort, yourIP);
+}
+
+function ping(){
+    setInterval(() => { 
+    let packetString = JSON.stringify({"type" : "ping"});
+    socket.send(packetString, 0, packetString.length, peerPort, yourIP);
+  }
+  , 10000); //send a ping every 10 seconds in case of inactivity so the NAT port doesnt close
 }
 
 natPunch();
