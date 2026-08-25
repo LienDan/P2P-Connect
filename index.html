@@ -2,19 +2,26 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <title>Hello from Electron renderer!</title>
+    <title>P2P Connect</title>
+    <style>
+      header{
+        background: rgb(255, 0, 0);
+        display: flex;
+        align-items: center; /*Centers the content vertically inside the footer*/ 
+        /*justify-content: center; Centers the content horizonally inside the footer*/
+        padding: 10px;
+      }
+      h2{
+        margin-left: auto;
+      }
+    </style>
+    <script type="module" src="frontend.jsx" defer></script>
   </head>
   <body>
-    <h1>Hello from Electron renderer!</h1>
-    <p>👋</p>
+    <header>
+    <h1>P2P Connect</h1>
+    
+    <h2>Developed by Daniel Lien</h2>
+    </header>
   </body>
 </html>

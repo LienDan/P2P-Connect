@@ -17,8 +17,8 @@ socket.on('error', (err) => {
 socket.on('message', (msg, rinfo) => {
   let msgJson = JSON.parse(String(msg));
 
-  console.log(`socket got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-  
+  //console.log(`socket got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+
   switch(msgJson.type){
     case "ping":
       //ping messages are sent only to keep NAT port alive, so we just return when we get it
@@ -51,8 +51,7 @@ let NATPunchStatus = 0;
 
 function natPunch(){
   NATPunchInterval = setInterval(() => { 
-    //I decided to wrap messages in a json object format so I could include meta data, such as the message type, to check if its a connection, a message, etc
-    let packet = {"type" : "connect", "value" : NATPunchStatus};
+    let packet = {"type" : "connect", "value" : NATPunchStatus}; //wrap messages in a json object format to include meta data, such as the message type, to check if its a connection, a message, etc
     let packetString = JSON.stringify(packet);
     socket.send(packetString, 0, packetString.length, peerPort, yourIP);
   }
