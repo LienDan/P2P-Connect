@@ -4,8 +4,11 @@
     <meta charset="UTF-8" />
     <title>P2P Connect</title>
     <style>
+      body {
+          background-color: rgb(206, 131, 131);
+      }
       header{
-        background: rgb(255, 0, 0);
+        background: rgb(206, 82, 82);
         display: flex;
         align-items: center; /*Centers the content vertically inside the footer*/ 
         /*justify-content: center; Centers the content horizonally inside the footer*/
@@ -13,6 +16,15 @@
       }
       h2{
         margin-left: auto;
+      }
+      .inputs{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+      }
+      label {
+        margin-right: 10px;
       }
     </style>
     <script type="module" src="frontend.jsx" defer></script>
@@ -23,5 +35,8 @@
     
     <h2>Developed by Daniel Lien</h2>
     </header>
+    <!-- I created a div element specifically for React code to render and modify the page -->
+    <div id="reactApp">
+    </div>
   </body>
 </html>
