@@ -1,10 +1,13 @@
+//this CLIbackend.js file is for running without a frontend, so it's just in terminal command line
+//run with "node CLIbackend.js [yourIP] [peerIP] [yourPort] [peerPort]"
+
 const dgram = require('node:dgram');
 const readline = require('node:readline');
 
-let yourIP;
-let peerIP;
-let yourPort;
-let peerPort;
+let yourIP = process.argv[2];
+let peerIP = process.argv[3];
+let yourPort = parseInt(process.argv[4]);
+let peerPort = parseInt(process.argv[5]);
 let connected = false;
 
 const socket = dgram.createSocket('udp4');
@@ -13,6 +16,7 @@ socket.on('error', (err) => {
   console.error(`socket error:\n${err.stack}`);
   socket.close();
 });
+
 socket.on('message', (msg, rinfo) => {
   let msgJson = JSON.parse(String(msg));
 
@@ -37,22 +41,14 @@ socket.on('message', (msg, rinfo) => {
   }
 
 });
+
 socket.on('listening', () => {
   const address = socket.address();
   console.log(`socket listening ${address.address}:${address.port}`);
 });
 
-function tryConnect(arg1, arg2, arg3, arg4, mainWindow){
-  yourIP = arg1;
-  peerIP = arg2;
-  yourPort = arg3;
-  peerPort = arg4;
-  //socket.bind(yourPort);
-  //natPunch();
 
-  mainWindow.webContents.send('connectResult', true);
-};
-
+socket.bind(yourPort);
 let NATPunchInterval = null;
 let NATPunchStatus = 0; 
 
@@ -69,7 +65,7 @@ function sendMessage(message){
   let packet = {"type" : "message", "value" : message}
   let packetString = JSON.stringify(packet);
   socket.send(packetString, 0, packetString.length, peerPort, yourIP);
-};
+}
 
 function ping(){
     setInterval(() => { 
@@ -77,10 +73,13 @@ function ping(){
     socket.send(packetString, 0, packetString.length, peerPort, yourIP);
   }
   , 10000); //send a ping every 10 seconds in case of inactivity so the NAT port doesnt close
-};
+}
 
-//export functions so it can be used in main.js
-module.exports = {
-    tryConnect,
-    sendMessage
-};
+natPunch();
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+rl.on("line", sendMessage);

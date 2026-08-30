@@ -10,7 +10,17 @@ function tryConnect(submission) {
   const formData = new FormData(form);
   console.log("Your IP: " + formData.get("yourIP") + "\nPeer IP: " + formData.get("peerIP") + "\nYour Port: " + formData.get("yourPort") + "\nPeer Port: " + formData.get("peerPort"));
 
+  window.electronAPI.tryConnect(formData.get("yourIP"), formData.get("peerIP"), formData.get("yourPort"), formData.get("peerPort"))
 }
+
+window.electronAPI.connectResult((value) => {
+  root.render(
+    <div>
+      <label>FRONTEND AND BACKEND COMMUNICATION TEST</label>
+    </div>
+    )
+  }
+)
 
 function ConnectionForm(){
     //reminder that react component needs to start with a capital, so the function name needs to start with captial
