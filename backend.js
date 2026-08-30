@@ -47,8 +47,8 @@ function tryConnect(arg1, arg2, arg3, arg4, mainWindow){
   peerIP = arg2;
   yourPort = arg3;
   peerPort = arg4;
-  //socket.bind(yourPort);
-  //natPunch();
+  socket.bind(yourPort);
+  natPunch();
 
   mainWindow.webContents.send('connectResult', true);
 };

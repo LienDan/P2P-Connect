@@ -30,7 +30,7 @@ app.on('window-all-closed', () => {
 })
 
 //recieve messages
-ipcMain.on('tryConnect', (arg1, arg2, arg3, arg4) => {
+ipcMain.on('tryConnect', (_event, arg1, arg2, arg3, arg4) => {
     backend.tryConnect(arg1, arg2, arg3, arg4, win);
 });
 

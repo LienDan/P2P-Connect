@@ -3,8 +3,8 @@ const { contextBridge, ipcRenderer } = require('electron/renderer');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   //frontend -> backend
-  tryConnect: (message) => {
-    ipcRenderer.send('tryConnect', message);
+  tryConnect: (arg1, arg2, arg3, arg4) => {
+    ipcRenderer.send('tryConnect', arg1, arg2, arg3, arg4);
   },
 
   //backend -> frontend
@@ -12,5 +12,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('connectResult', (_event, result) => callback(result))
   }
 
-
+  //note to self, front->back and back->front have slightly diff syntax for communication.
 });

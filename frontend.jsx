@@ -28,22 +28,22 @@ function ConnectionForm(){
     <form id="setup" onSubmit={tryConnect}>
       <div className="inputs">
         <label htmlFor="yourIP">Your IP </label>
-        <input type="text" id="yourIP" name="yourIP" required />
+        <input type="text" id="yourIP" name="yourIP" value="localhost" required />
       </div>
 
       <div className="inputs">
         <label htmlFor="peerIP">Peer IP </label>
-        <input type="text" id="peerIP" name="peerIP" required />
+        <input type="text" id="peerIP" name="peerIP" value="localhost" required />
       </div>
 
       <div className="inputs">
         <label htmlFor="yourPort">Your Port </label>
-        <input type="number" id="yourPort" name="yourPort" min="0" max="65535" required />
+        <input type="number" id="yourPort" name="yourPort" value="50000" min="0" max="65535" required />
       </div>
 
       <div className="inputs">
         <label htmlFor="peerPort">Peer Port</label>
-        <input type="number" id="peerPort" name="peerPort" min="0" max="65535" required
+        <input type="number" id="peerPort" name="peerPort" value="50000" min="0" max="65535" required
         />
       </div>
 
