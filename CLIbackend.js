@@ -36,6 +36,7 @@ socket.on('message', (msg, rinfo) => {
         socket.send(packetString, 0, packetString.length, peerPort, yourIP);
         clearInterval(NATPunchInterval);
         connected = true;
+        console.log("CONNECTED!");
         ping();
       }
   }
@@ -49,6 +50,7 @@ socket.on('listening', () => {
 
 
 socket.bind(yourPort);
+
 let NATPunchInterval = null;
 let NATPunchStatus = 0; 
 

@@ -6,10 +6,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   tryConnect: (arg1, arg2, arg3, arg4) => {
     ipcRenderer.send('tryConnect', arg1, arg2, arg3, arg4);
   },
+  sendMessage: (message) => {
+    ipcRenderer.send('sendMessage', message);
+  },
 
   //backend -> frontend
   connectResult: (callback) => {
     ipcRenderer.on('connectResult', (_event, result) => callback(result))
+  },
+  recieveMessage: (callback) => {
+    ipcRenderer.on('recieveMessage', (_event, message) => callback(message))
   }
 
   //note to self, front->back and back->front have slightly diff syntax for communication.

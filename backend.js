@@ -6,51 +6,65 @@ let peerIP;
 let yourPort;
 let peerPort;
 let connected = false;
+let mainWindow;
 
-const socket = dgram.createSocket('udp4');
+let socket = dgram.createSocket('udp4');;
 
-socket.on('error', (err) => {
-  console.error(`socket error:\n${err.stack}`);
+function resetSocket(socket){
+  //socket.close closes the socket globally, but setting socket = dgram... only applies to the local socket variable, so we return this socket later
   socket.close();
-});
-socket.on('message', (msg, rinfo) => {
-  let msgJson = JSON.parse(String(msg));
+  socket = dgram.createSocket('udp4');
 
-  //console.log(`socket got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+  socket.on('error', (err) => {
+    console.error(`socket error:\n${err.stack}`);
+    socket.close();
+  });
+  socket.on('message', (msg, rinfo) => {
+    let msgJson = JSON.parse(String(msg));
 
-  switch(msgJson.type){
-    case "ping":
-      //ping messages are sent only to keep NAT port alive, so we just return when we get it
-      return;
-    case "message":
-      console.log(msgJson.value);
-    case "connect":
-      NATPunchStatus += 1;
-      if(NATPunchStatus < 2){
-        let packet = {"type" : "connect", "value" : NATPunchStatus};
-        let packetString = JSON.stringify(packet);
-        socket.send(packetString, 0, packetString.length, peerPort, yourIP);
-        clearInterval(NATPunchInterval);
-        connected = true;
-        ping();
-      }
-  }
+    //console.log(`socket got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
-});
-socket.on('listening', () => {
-  const address = socket.address();
-  console.log(`socket listening ${address.address}:${address.port}`);
-});
+    switch(msgJson.type){
+      case "ping":
+        //ping messages are sent only to keep NAT port alive, so we just return when we get it
+        return;
+      case "message":
+        console.log(msgJson.value);
+        mainWindow.webContents.send('recieveMessage', msgJson.value);
+      case "connect":
+        NATPunchStatus += 1;
+        if(NATPunchStatus < 2){
+          let packet = {"type" : "connect", "value" : NATPunchStatus};
+          let packetString = JSON.stringify(packet);
+          socket.send(packetString, 0, packetString.length, peerPort, yourIP);
+          clearInterval(NATPunchInterval);
+          connected = true;
+          console.log("CONNECTED!");
+          mainWindow.webContents.send('connectResult', true);
+          ping();
+        }
+    }
 
-function tryConnect(arg1, arg2, arg3, arg4, mainWindow){
+  });
+  socket.on('listening', () => {
+    const address = socket.address();
+    console.log(`socket listening ${address.address}:${address.port}`);
+  });
+
+  return socket;
+}
+
+function tryConnect(arg1, arg2, arg3, arg4, mainWindowArg){
+  socket = resetSocket(socket);
   yourIP = arg1;
   peerIP = arg2;
   yourPort = arg3;
   peerPort = arg4;
   socket.bind(yourPort);
   natPunch();
-
-  mainWindow.webContents.send('connectResult', true);
+  
+  mainWindow = mainWindowArg;
+  mainWindow.webContents.send('connectResult', false);
 };
 
 let NATPunchInterval = null;
@@ -68,13 +82,13 @@ function natPunch(){
 function sendMessage(message){
   let packet = {"type" : "message", "value" : message}
   let packetString = JSON.stringify(packet);
-  socket.send(packetString, 0, packetString.length, peerPort, yourIP);
+  socket.send(packetString, 0, packetString.length, peerPort, peerIP);
 };
 
 function ping(){
     setInterval(() => { 
     let packetString = JSON.stringify({"type" : "ping"});
-    socket.send(packetString, 0, packetString.length, peerPort, yourIP);
+    socket.send(packetString, 0, packetString.length, peerPort, peerIP);
   }
   , 10000); //send a ping every 10 seconds in case of inactivity so the NAT port doesnt close
 };

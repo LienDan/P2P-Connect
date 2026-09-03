@@ -15,7 +15,7 @@ const createWindow = () => {
     }
   });
   
-  win.maximize()
+  //win.maximize()
 
   //during development, using npm run dev will open the site on localhost, which we will load here
   //in final build, switch to loadFile
@@ -34,3 +34,6 @@ ipcMain.on('tryConnect', (_event, arg1, arg2, arg3, arg4) => {
     backend.tryConnect(arg1, arg2, arg3, arg4, win);
 });
 
+ipcMain.on('sendMessage', (_event, message) => {
+    backend.sendMessage(message);
+});
