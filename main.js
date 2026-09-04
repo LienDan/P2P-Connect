@@ -17,10 +17,10 @@ const createWindow = () => {
   
   //win.maximize()
 
-  //during development, using npm run dev will open the site on localhost, which we will load here
+  //during development, using npm run dev will open the site on localhost
   //in final build, switch to loadFile
-  win.loadURL('http://localhost:5173');
-  //win.loadFile('index.html') 
+  //win.loadURL('http://localhost:5173');
+  win.loadFile('dist/index.html'); 
 }
 app.whenReady().then(() => {
   createWindow()
