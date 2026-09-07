@@ -27,8 +27,6 @@ window.electronAPI.connectResult((value) => {
   }
 })
 
-
-
 function Messenger(){
   //react doesnt automatically rerender when variables get updated, so we use useState
   const [messageHistory, updateMessageHistory] = useState("You are now connected.");

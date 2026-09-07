@@ -31,17 +31,19 @@ function resetSocket(socket){
       case "message":
         console.log(msgJson.value);
         mainWindow.webContents.send('recieveMessage', msgJson.value);
+        break;
       case "connect":
         NATPunchStatus += 1;
         if(NATPunchStatus < 2){
           let packet = {"type" : "connect", "value" : NATPunchStatus};
           let packetString = JSON.stringify(packet);
-          socket.send(packetString, 0, packetString.length, peerPort, yourIP);
+          socket.send(packetString, 0, packetString.length, peerPort, peerIP);
           clearInterval(NATPunchInterval);
           connected = true;
           console.log("CONNECTED!");
           mainWindow.webContents.send('connectResult', true);
           ping();
+          break;
         }
     }
 
@@ -60,6 +62,7 @@ function tryConnect(arg1, arg2, arg3, arg4, mainWindowArg){
   peerIP = arg2;
   yourPort = arg3;
   peerPort = arg4;
+  NATPunchStatus = 0;
   socket.bind(yourPort);
   natPunch();
   
@@ -74,7 +77,7 @@ function natPunch(){
   NATPunchInterval = setInterval(() => { 
     let packet = {"type" : "connect", "value" : NATPunchStatus}; //wrap messages in a json object format to include meta data, such as the message type, to check if its a connection, a message, etc
     let packetString = JSON.stringify(packet);
-    socket.send(packetString, 0, packetString.length, peerPort, yourIP);
+    socket.send(packetString, 0, packetString.length, peerPort, peerIP);
   }
   , 500);
 };
