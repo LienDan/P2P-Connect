@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   tryConnect: (arg1, arg2, arg3, arg4) => {
     ipcRenderer.send('tryConnect', arg1, arg2, arg3, arg4);
   },
+  stopConnect: () => {
+    ipcRenderer.send('stopConnect');
+  },
   sendMessage: (message) => {
     ipcRenderer.send('sendMessage', message);
   },

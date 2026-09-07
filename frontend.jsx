@@ -21,7 +21,10 @@ window.electronAPI.connectResult((value) => {
     root.render(
     <div>
       <label>CONNECTION IN PROGRESS...</label>
-      <button type="submit" id="cancelButton" onClick={() => root.render(<ConnectionForm />)}>Cancel Connection</button>
+      <button type="submit" id="cancelButton" onClick={() => {
+        root.render(<ConnectionForm />);
+        window.electronAPI.stopConnect();
+      }}>Cancel Connection</button>
     </div>
     )
   }
@@ -61,8 +64,8 @@ function Messenger(){
 }
 
 function ConnectionForm(){
-    //reminder that react component needs to start with a capital, so the function name needs to start with captial
-    return (
+  //reminder that react component needs to start with a capital, so the function name needs to start with captial
+  return (
     <form id="setup" onSubmit={tryConnect}>
       <div className="inputs">
         <label htmlFor="yourIP">Your IP </label>

@@ -70,7 +70,13 @@ function tryConnect(arg1, arg2, arg3, arg4, mainWindowArg){
   mainWindow.webContents.send('connectResult', false);
 };
 
+function stopConnect(){
+  clearInterval(NATPunchInterval);
+  clearInterval(pingInterval);
+};
+
 let NATPunchInterval = null;
+let pingInterval = null;
 let NATPunchStatus = 0; 
 
 function natPunch(){
@@ -89,7 +95,7 @@ function sendMessage(message){
 };
 
 function ping(){
-    setInterval(() => { 
+    pingInterval = setInterval(() => { 
     let packetString = JSON.stringify({"type" : "ping"});
     socket.send(packetString, 0, packetString.length, peerPort, peerIP);
   }
@@ -99,5 +105,6 @@ function ping(){
 //export functions so it can be used in main.js
 module.exports = {
     tryConnect,
+    stopConnect,
     sendMessage
 };

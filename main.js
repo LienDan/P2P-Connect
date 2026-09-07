@@ -33,7 +33,10 @@ app.on('window-all-closed', () => {
 ipcMain.on('tryConnect', (_event, arg1, arg2, arg3, arg4) => {
     backend.tryConnect(arg1, arg2, arg3, arg4, win);
 });
-
+ipcMain.on('stopConnect', (_event) => {
+    backend.stopConnect();
+});
 ipcMain.on('sendMessage', (_event, message) => {
     backend.sendMessage(message);
 });
+
