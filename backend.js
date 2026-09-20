@@ -19,7 +19,7 @@ let secretKey;
 
 function getIntegrity(message){
   let hmac = crypto.createHmac('sha256', secretKey);
-  hmac.update('Hello, World!');
+  hmac.update(message);
   return hmac.digest('hex');
 }
 
@@ -81,10 +81,13 @@ function resetSocket(socket){
         return;
       case "message":
         let message = decrypt(msgJson.value.encrypted, msgJson.value.iv);
-        console.log("Given integrity value: " + msgJson.integrity + "\ncalculated integrity value: " + getIntegrity(message));
         console.log(msgJson.value);
-        if(msgJson.integrity == getIntegrity(message)){
+        if(msgJson.integrity == getIntegrity(msgJson.value.encrypted + msgJson.value.iv)){
           mainWindow.webContents.send('recieveMessage', message);
+        }
+        else{
+          console.log("Integrity failed.");
+          console.log("Given integrity value: " + msgJson.integrity + "\ncalculated integrity value: " + getIntegrity(msgJson.value.encrypted + msgJson.value.iv));
         }
         break;
       case "connect":
@@ -146,7 +149,8 @@ function natPunch(){
 };
 
 function sendMessage(message){
-  let packet = {"type" : "message", "value" : encrypt(message), "integrity" : getIntegrity(message)};
+  let encryptedMessage = encrypt(message);
+  let packet = {"type" : "message", "value" : encryptedMessage, "integrity" : getIntegrity(encryptedMessage.encrypted + encryptedMessage.iv)};
   let packetString = JSON.stringify(packet);
   socket.send(packetString, 0, packetString.length, peerPort, peerIP);
 };
