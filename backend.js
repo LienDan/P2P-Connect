@@ -16,7 +16,12 @@ const keyexchange = crypto.getDiffieHellman('modp14'); //get DF (instead of crea
 keyexchange.generateKeys();
 const publickey = keyexchange.getPublicKey();
 let secretKey;
-//console.log(publickey);
+
+function getIntegrity(message){
+  let hmac = crypto.createHmac('sha256', secretKey);
+  hmac.update('Hello, World!');
+  return hmac.digest('hex');
+}
 
 //data is a Object message from the peer
 function createsecretKey(data){
@@ -26,9 +31,6 @@ function createsecretKey(data){
   //however, since secretValue can't be used as our key as it is too long to be used in AES, so we need to create a secret key based on our secret value
   //pbkdf2Sync is a function that takes an input, and returns a key with the specificed length (ignore salt, which is a random value to change the output key)
   secretKey = crypto.pbkdf2Sync(secretValue, '', 10000, 32, 'sha256');
-
-  //console.log("Secret key is " + secretKey);
-  //console.log("Secret key length is " + secretKey.length);
 };
 
 function encrypt(message){
@@ -72,18 +74,20 @@ function resetSocket(socket){
 
   socket.on('message', (msg, rinfo) => {
     let msgJson = JSON.parse(String(msg));
-    //console.log(`socket got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
     switch(msgJson.type){
       case "ping":
         //ping messages are sent only to keep NAT port alive, so we just return when we get it
         return;
       case "message":
+        let message = decrypt(msgJson.value.encrypted, msgJson.value.iv);
+        console.log("Given integrity value: " + msgJson.integrity + "\ncalculated integrity value: " + getIntegrity(message));
         console.log(msgJson.value);
-        mainWindow.webContents.send('recieveMessage', decrypt(msgJson.value.encrypted, msgJson.value.iv));
+        if(msgJson.integrity == getIntegrity(message)){
+          mainWindow.webContents.send('recieveMessage', message);
+        }
         break;
       case "connect":
-        //console.log(msgJson);
         createsecretKey(msgJson);
 
         NATPunchStatus += 1;
@@ -142,7 +146,7 @@ function natPunch(){
 };
 
 function sendMessage(message){
-  let packet = {"type" : "message", "value" : encrypt(message)};
+  let packet = {"type" : "message", "value" : encrypt(message), "integrity" : getIntegrity(message)};
   let packetString = JSON.stringify(packet);
   socket.send(packetString, 0, packetString.length, peerPort, peerIP);
 };
