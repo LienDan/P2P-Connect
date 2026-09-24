@@ -11,6 +11,11 @@ let mainWindow;
 
 let socket = dgram.createSocket('udp4');;
 
+//these counters will be used when sending messages and keeping track of ACKs
+let userACK = 0;
+let peerACK = 0;
+let awaitingACKS = {}; //store messages that we are awaiting ACKS for
+
 //use diffe hellements to exchange private keys that will be used later for AES encryption and decryption
 const keyexchange = crypto.getDiffieHellman('modp14'); //get DF (instead of create DF) using predefined group as we want to share G and p between clients
 keyexchange.generateKeys();
@@ -80,19 +85,34 @@ function resetSocket(socket){
         //ping messages are sent only to keep NAT port alive, so we just return when we get it
         return;
       case "message":
+        let sendACK = () => {
+          let packet = {"type" : "ACK", "value" : msgJson.ack}; 
+          let packetString = JSON.stringify(packet);
+          socket.send(packetString, 0, packetString.length, peerPort, peerIP);
+        }
+        if(peerACK > msgJson.ack){
+          //if message recieved has a smaller expected message ID, then we already recieved it and send another ACK back
+          sendACK();
+          return;
+        }
+        if(peerACK != msgJson.ack){
+          //if message recieved isnt the expected message ID, then we don't recieve it
+          return;
+        }
         let message = decrypt(msgJson.value.encrypted, msgJson.value.iv);
         console.log(msgJson.value);
-        if(msgJson.integrity == getIntegrity(msgJson.value.encrypted + msgJson.value.iv)){
+        if(msgJson.integrity == getIntegrity(JSON.stringify(msgJson.value))){
           mainWindow.webContents.send('recieveMessage', message);
+          peerACK++;
+          sendACK();
         }
         else{
           console.log("Integrity failed.");
-          console.log("Given integrity value: " + msgJson.integrity + "\ncalculated integrity value: " + getIntegrity(msgJson.value.encrypted + msgJson.value.iv));
+          console.log("Given integrity value: " + msgJson.integrity + "\ncalculated integrity value: " + getIntegrity(JSON.stringify(msgJson.value)));
         }
         break;
       case "connect":
         createsecretKey(msgJson);
-
         NATPunchStatus += 1;
         if(NATPunchStatus < 2){
           let packet = {"type" : "connect", "value" : NATPunchStatus, "publickey" : publickey};
@@ -103,11 +123,17 @@ function resetSocket(socket){
           console.log("CONNECTED!");
           mainWindow.webContents.send('connectResult', true);
           ping();
-          break;
         }
+        break;
+      case "ACK":
+        console.log("Recieved ACK");
+        //once we recieve the ACK, we stop sending the corrosponding message
+        clearInterval(awaitingACKS[msgJson.value]);
+        delete awaitingACKS[msgJson.value];
+        break;
     }
-
   });
+  
   socket.on('listening', () => {
     const address = socket.address();
     console.log(`socket listening ${address.address}:${address.port}`);
@@ -133,6 +159,11 @@ function tryConnect(arg1, arg2, arg3, arg4, mainWindowArg){
 function stopConnect(){
   clearInterval(NATPunchInterval);
   clearInterval(pingInterval);
+  let intervalsToRemove = Object.entries(awaitingACKS);
+  for (const [removeACK, removeInterval] of intervalsToRemove) {
+    clearInterval(removeInterval);
+    delete awaitingACKS[removeACK];
+  }
 };
 
 let NATPunchInterval = null;
@@ -140,19 +171,26 @@ let pingInterval = null;
 let NATPunchStatus = 0; 
 
 function natPunch(){
-  NATPunchInterval = setInterval(() => { 
+  let sendPunch = () => { 
     let packet = {"type" : "connect", "value" : NATPunchStatus, "publickey" : publickey}; //wrap messages in a json object format to include meta data, such as the message type, to check if its a connection, a message, etc
     let packetString = JSON.stringify(packet);
     socket.send(packetString, 0, packetString.length, peerPort, peerIP);
-  }
-  , 500);
+  };
+
+  sendPunch();
+  NATPunchInterval = setInterval(sendPunch, 500);
 };
 
 function sendMessage(message){
-  let encryptedMessage = encrypt(message);
-  let packet = {"type" : "message", "value" : encryptedMessage, "integrity" : getIntegrity(encryptedMessage.encrypted + encryptedMessage.iv)};
-  let packetString = JSON.stringify(packet);
-  socket.send(packetString, 0, packetString.length, peerPort, peerIP);
+  let messageAck = userACK++;
+  let sendMessage = () => {
+    let encryptedMessage = encrypt(message);
+    let packet = {"type" : "message", "value" : encryptedMessage, "integrity" : getIntegrity(JSON.stringify(encryptedMessage)), "ack": messageAck};
+    let packetString = JSON.stringify(packet);
+    socket.send(packetString, 0, packetString.length, peerPort, peerIP);
+  }
+  sendMessage();
+  awaitingACKS[messageAck] = setInterval(sendMessage, 500);
 };
 
 function ping(){
