@@ -120,13 +120,11 @@ function resetSocket(socket){
           socket.send(packetString, 0, packetString.length, peerPort, peerIP);
           clearInterval(NATPunchInterval);
           connected = true;
-          console.log("CONNECTED!");
           mainWindow.webContents.send('connectResult', true);
           ping();
         }
         break;
       case "ACK":
-        console.log("Recieved ACK");
         //once we recieve the ACK, we stop sending the corrosponding message
         clearInterval(awaitingACKS[msgJson.value]);
         delete awaitingACKS[msgJson.value];
@@ -163,7 +161,7 @@ function stopConnect(){
   for (const [removeACK, removeInterval] of intervalsToRemove) {
     clearInterval(removeInterval);
     delete awaitingACKS[removeACK];
-  }
+  };
 };
 
 let NATPunchInterval = null;
